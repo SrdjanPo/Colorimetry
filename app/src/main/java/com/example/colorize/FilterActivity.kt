@@ -95,6 +95,9 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
         adapter.addFragment(editImageFragment, "EDIT")
 
         viewPager!!.adapter = adapter
+
+        //filterListFragment.displayImage(originalImage)
+
     }
 
     private fun loadImage() {
@@ -103,6 +106,7 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
         filteredImage = originalImage!!.copy(Bitmap.Config.ARGB_8888, true)
         finalImage = originalImage!!.copy(Bitmap.Config.ARGB_8888, true)
         image_preview.setImageBitmap(originalImage)
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

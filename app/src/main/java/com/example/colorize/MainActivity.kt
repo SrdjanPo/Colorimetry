@@ -34,7 +34,10 @@ import android.widget.Filter
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.algorithmia.algo.AlgoResponse
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.activity_filter.*
 import java.io.*
 import java.lang.Exception
 import java.nio.ByteBuffer
@@ -282,11 +285,20 @@ class MainActivity : AppCompatActivity() {
             out.flush()
             out.close()
 
-            Toast.makeText(
+            Log.d("absolute path", file.absolutePath)
+
+
+            val snackBar = Snackbar.make(main_constraintLayout, "Image saved to gallery", Snackbar.LENGTH_LONG).setAction("OPEN", {
+                openImage(file)
+            })
+
+            snackBar.show()
+
+            /*Toast.makeText(
                 this,
                 "Image saved to: Gallery/Colorimetry/".plus(fname),
                 Toast.LENGTH_LONG
-            ).show()
+            ).show()*/
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -305,6 +317,18 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+    }
+
+    private fun openImage(file: File) {
+        val intent = Intent()
+        intent.action = Intent.ACTION_VIEW
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        val photoURI = FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".provider", file)
+
+        intent.setDataAndType(photoURI, "image/*")
+
+        startActivity(intent)
     }
 
     override fun onRequestPermissionsResult(

@@ -57,5 +57,8 @@ dependencies {
     implementation 'com.karumi:dexter:4.1.0'
     implementation 'info.androidhive:imagefilters:1.0.7'
 
+    //cardview
+    implementation 'ja.burhanrashid52:photoeditor:0.2.1'
+
 
 }
