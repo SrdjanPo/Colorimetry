@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.colorize.Utils.BitmapUtils
 import com.example.colorize.Utils.SpaceItemDecoration
 import com.example.colorize.adapters.ThumbnailAdapter
@@ -19,11 +20,14 @@ import com.zomato.photofilters.imageprocessors.Filter
 import com.zomato.photofilters.utils.ThumbnailItem
 import com.zomato.photofilters.utils.ThumbnailsManager
 import kotlinx.android.synthetic.main.fragment_filter_list.*
+import kotlinx.android.synthetic.main.fragment_filter_list.view.*
 import kotlinx.android.synthetic.main.thumbnail_list_item.*
 import java.lang.reflect.Type
 
 
 class FilterListFragment : Fragment(), FilterListFragmentListener {
+
+    private lateinit var recycler_view : RecyclerView
 
     private var listener : FilterListFragmentListener? = null
     private lateinit var adapter: ThumbnailAdapter
@@ -51,9 +55,11 @@ class FilterListFragment : Fragment(), FilterListFragmentListener {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        val view = inflater.inflate(R.layout.fragment_filter_list, container, false)
+        val itemView = inflater.inflate(R.layout.fragment_filter_list, container, false)
         thumbnailItemList = ArrayList()
         adapter = ThumbnailAdapter(activity!!, thumbnailItemList, this)
+
+        recycler_view = itemView.findViewById<RecyclerView>(R.id.recycler_view)
 
         recycler_view.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false)
         recycler_view.itemAnimator = DefaultItemAnimator()
@@ -63,10 +69,10 @@ class FilterListFragment : Fragment(), FilterListFragmentListener {
 
         displayImage(null)
         
-        return view
+        return itemView
     }
 
-    private fun displayImage(bitmap: Bitmap?) {
+    fun displayImage(bitmap: Bitmap?) {
         val r = Runnable {
             val thumbImage : Bitmap?
 

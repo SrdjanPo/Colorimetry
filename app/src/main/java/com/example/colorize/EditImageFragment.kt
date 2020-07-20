@@ -17,6 +17,11 @@ class EditImageFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
 
     private var listener: EditImageFragmentListener? = null
 
+    private lateinit var seekbar_brightness : SeekBar
+    private lateinit var seekbar_contrast : SeekBar
+    private lateinit var seekbar_saturation : SeekBar
+
+
     fun resetControls () {
 
         seekbar_brightness.progress = 100
@@ -76,6 +81,11 @@ class EditImageFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_edit_image, container, false)
+
+        //View
+        seekbar_brightness = view.findViewById<SeekBar>(R.id.seekbar_brightness)
+        seekbar_contrast = view.findViewById<SeekBar>(R.id.seekbar_contrast)
+        seekbar_saturation = view.findViewById<SeekBar>(R.id.seekbar_saturation)
 
         seekbar_brightness.max = 200
         seekbar_brightness.progress = 100

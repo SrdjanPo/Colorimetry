@@ -14,7 +14,6 @@ import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_main.*
 import com.google.gson.reflect.TypeToken
 import com.algorithmia.Algorithmia.file
-import java.io.IOException
 import java.nio.file.Files.exists
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
@@ -28,15 +27,15 @@ import android.util.Base64
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
+import android.view.animation.Interpolator
 import android.view.animation.LinearInterpolator
 import android.view.inputmethod.InputMethodManager
+import android.widget.Filter
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.algorithmia.algo.AlgoResponse
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
+import java.io.*
 import java.lang.Exception
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
@@ -52,6 +51,7 @@ class MainActivity : AppCompatActivity() {
     private var REQUEST_CODE_STORAGE_PERMISSION = 1
     private var REQUEST_CODE_SELECT_IMAGE = 2
     private var REQUEST_CODE_WRITE_EXTERNAL = 3
+    private var REQUEST_CODE_FILTER = 4
     private lateinit var photoFromGallery: String
     private lateinit var bitmapImageGray: Bitmap
     private lateinit var bitmapImageColored: Bitmap
@@ -133,6 +133,39 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        filterBtn.setOnClickListener {
+
+            val bmp = bitmapImageColored
+            val stream = ByteArrayOutputStream()
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            val byteArray = stream.toByteArray()
+
+            val filePath = tempFileImage(this, bitmapImageColored, "name")
+
+            var intent = Intent(this, FilterActivity::class.java)
+            intent.putExtra("sentImageByteArray", filePath)
+            startActivityForResult(intent, REQUEST_CODE_FILTER)
+        }
+
+    }
+
+    //creates a temporary file and return the absolute file path
+    fun tempFileImage(context: Context, bitmap: Bitmap, name: String): String {
+
+        val outputDir = context.cacheDir
+        val imageFile = File(outputDir, "$name.jpg")
+
+        val os: OutputStream
+        try {
+            os = FileOutputStream(imageFile)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, os)
+            os.flush()
+            os.close()
+        } catch (e: Exception) {
+            Log.e(context.javaClass.simpleName, "Error writing file", e)
+        }
+
+        return imageFile.absolutePath
     }
 
     fun colorize(url: String) {
@@ -249,7 +282,11 @@ class MainActivity : AppCompatActivity() {
             out.flush()
             out.close()
 
-            Toast.makeText(this, "Image saved to: Gallery/Colorimetry/".plus(fname), Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this,
+                "Image saved to: Gallery/Colorimetry/".plus(fname),
+                Toast.LENGTH_LONG
+            ).show()
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -363,6 +400,34 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
+            }
+        }
+
+        if (requestCode == REQUEST_CODE_FILTER && resultCode == Activity.RESULT_OK) {
+
+            if (data != null) {
+
+                val dataImage = data.getStringExtra("result")
+
+                Log.d("DATAIMAGE", data.toString())
+
+                //gets the file path
+                val finalFilePath = intent.getStringExtra("result")
+
+                //loads the file
+                val file = File(dataImage)
+
+                val filteredImageResult = BitmapFactory.decodeFile(file.absolutePath)
+                //imageView.setImageBitmap(bitmap)
+
+                bitmapImageColored = filteredImageResult
+                //set filtered image on ImageView
+                imageview.setImageBitmap(filteredImageResult)
+                photoSwitch.isChecked = true
+
+            } else {
+
+                Toast.makeText(this, "Something went wrong", Toast.LENGTH_LONG).show()
             }
         }
     }
