@@ -5,9 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".FilterActivity"
-    android:id="@+id/coordinator">
+    android:id="@+id/coordinator"
+    android:background="@color/colorPrimaryDark">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/toolbarHolder"
         android:theme="@style/AppTheme.AppBarOverlay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -25,8 +27,68 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_main">
+    <LinearLayout
+        android:id="@+id/photoArea"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbarHolder"
+        app:layout_constraintBottom_toTopOf="@id/fragmentHolder"
+        android:orientation="vertical"
+        android:gravity="center">
 
-    </include>
+        <androidx.cardview.widget.CardView
+            android:id="@+id/imageCard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:elevation="4dp"
+            app:cardElevation="8dp"
+            app:cardPreventCornerOverlap="false">
+
+            <ja.burhanrashid52.photoeditor.PhotoEditorView
+                android:id="@+id/image_preview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/default_gray_image" />
+
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/fragmentHolder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+    </FrameLayout>
+
+<!--    <com.example.colorize.Utils.NonSwipeableViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+    </com.example.colorize.Utils.NonSwipeableViewPager>-->
+
+    <!--<com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        app:tabGravity="fill"
+        app:tabMode="fixed"
+        app:tabTextColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+    </com.google.android.material.tabs.TabLayout>-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

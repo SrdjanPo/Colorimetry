@@ -3,6 +3,7 @@ package com.example.colorize
 
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -57,6 +58,8 @@ class FilterListFragment : Fragment(), FilterListFragmentListener {
         // Inflate the layout for this fragment
         val itemView = inflater.inflate(R.layout.fragment_filter_list, container, false)
         thumbnailItemList = ArrayList()
+
+        Log.d("INICIJALIZACIJA", "NIGA")
         adapter = ThumbnailAdapter(activity!!, thumbnailItemList, this)
 
         recycler_view = itemView.findViewById<RecyclerView>(R.id.recycler_view)

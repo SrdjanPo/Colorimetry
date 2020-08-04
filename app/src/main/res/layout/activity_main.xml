@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,57 +12,76 @@
     tools:context=".MainActivity"
     android:id="@+id/main_constraintLayout">
 
+
     <LinearLayout
         android:id="@+id/photoLL"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginBottom="20dp"
-        android:layout_marginTop="30dp"
-        android:layout_marginEnd="30dp"
-        android:background="@color/colorPrimaryDark"
+        android:layout_height="0dp"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:gravity="center"
-        android:padding="15dp"
-        app:layout_constraintBottom_toTopOf="@id/horizontalLine"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/helpButtons"
+        android:orientation="vertical"
+        android:gravity="center">
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/imageCard"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/colorPrimary"
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/imageCard"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/colorPrimary"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:elevation="4dp"
+                app:cardElevation="8dp"
+                app:cardPreventCornerOverlap="false">
+
+                <ImageView
+                    android:id="@+id/imageview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/default_gray_image" />
+
+            </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:id="@+id/switchView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="visible"
+            android:layout_marginTop="20dp"
             android:clipChildren="false"
-            android:clipToPadding="false"
-            android:elevation="4dp"
-            app:cardElevation="8dp"
-            app:cardPreventCornerOverlap="false">
+            android:clipToPadding="false">
 
-            <ImageView
-                android:id="@+id/imageview"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:adjustViewBounds="true"
-                android:scaleType="fitCenter"
-                android:src="@drawable/default_gray_image" />
+            <Switch
+                android:id="@+id/photoSwitch"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:scaleX="1.5"
+                android:scaleY="1.5">
 
-        </androidx.cardview.widget.CardView>
+            </Switch>
+
+            <TextView
+                android:id="@+id/switchText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:text="Disabled"
+                android:textColor="@color/white">
+            </TextView>
+
+        </LinearLayout>
 
     </LinearLayout>
 
-
-    <View
-        android:id="@+id/horizontalLine"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginBottom="175dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-    </View>
 
     <LinearLayout
         android:id="@+id/buttons"
@@ -68,7 +89,9 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <Button
             android:id="@+id/fromGalleryButton"
@@ -132,45 +155,14 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/switchView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:orientation="vertical"
-        android:visibility="visible"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/photoLL">
-
-        <Switch
-            android:id="@+id/photoSwitch"
-            android:layout_width="50dp"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:scaleX="1.5"
-            android:scaleY="1.5">
-
-        </Switch>
-
-        <TextView
-            android:id="@+id/switchText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Disabled"
-            android:textColor="@color/white">
-
-        </TextView>
-
-    </LinearLayout>
-
-    <LinearLayout
         android:id="@+id/helpButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toTopOf="@id/buttons"
-        android:gravity="center"
-        android:layout_marginBottom="10dp">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="10dp"
+        android:gravity="center">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/downloadBtn"
@@ -196,5 +188,7 @@
             app:layout_constraintStart_toEndOf="@id/downloadBtn" />
 
     </LinearLayout>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -14,19 +14,15 @@
     <LinearLayout
         android:id="@+id/photoArea"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginBottom="20dp"
-        android:layout_marginTop="80dp"
-        android:layout_marginEnd="30dp"
-        android:background="@color/colorPrimaryDark"
+        android:layout_height="0dp"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:gravity="center"
-        android:padding="15dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/viewPager"
+        android:orientation="vertical"
+        android:gravity="center">
 
         <androidx.cardview.widget.CardView
             android:id="@+id/imageCard"
@@ -39,7 +35,7 @@
             app:cardElevation="8dp"
             app:cardPreventCornerOverlap="false">
 
-            <ImageView
+            <ja.burhanrashid52.photoeditor.PhotoEditorView
                 android:id="@+id/image_preview"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -55,13 +51,11 @@
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@id/tabs"
-        app:layout_constraintTop_toBottomOf="@id/photoArea"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
     </com.example.colorize.Utils.NonSwipeableViewPager>
 
-    <com.google.android.material.tabs.TabLayout
+    <!--<com.google.android.material.tabs.TabLayout
         android:id="@+id/tabs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -71,6 +65,6 @@
         app:tabTextColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent">
 
-    </com.google.android.material.tabs.TabLayout>
+    </com.google.android.material.tabs.TabLayout>-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

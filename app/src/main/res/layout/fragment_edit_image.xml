@@ -2,12 +2,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     tools:context=".EditImageFragment"
-    android:gravity="center_vertical"
+    android:gravity="center"
+    android:layout_gravity="bottom"
     android:orientation="vertical"
     android:paddingLeft="16dp"
-    android:paddingRight="16dp">
+    android:paddingRight="16dp"
+    android:paddingBottom="15dp"
+    android:background="@color/colorPrimaryDark"
+    android:layout_marginTop="20dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,7 +21,7 @@
         android:paddingBottom="10dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="80dp"
             android:layout_height="wrap_content"
             android:text="Brightness"
             android:textColor="@color/white">
@@ -42,7 +46,7 @@
         android:paddingBottom="10dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="80dp"
             android:layout_height="wrap_content"
             android:text="Contrast"
             android:textColor="@color/white">
@@ -67,7 +71,7 @@
         android:paddingBottom="10dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="80dp"
             android:layout_height="wrap_content"
             android:text="Saturation"
             android:textColor="@color/white">

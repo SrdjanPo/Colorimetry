@@ -18,8 +18,9 @@ import com.zomato.photofilters.imageprocessors.subfilters.BrightnessSubFilter
 import com.zomato.photofilters.imageprocessors.subfilters.ContrastSubFilter
 import com.zomato.photofilters.imageprocessors.subfilters.SaturationSubfilter
 import kotlinx.android.synthetic.main.activity_filter.*
-import kotlinx.android.synthetic.main.content_main.*
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.os.Handler
 import android.util.Log
 import androidx.core.content.ContextCompat
 import java.io.File
@@ -27,11 +28,17 @@ import com.algorithmia.Algorithmia.file
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.lang.Exception
+import androidx.core.os.HandlerCompat.postDelayed
+import com.google.android.material.snackbar.Snackbar
+import ja.burhanrashid52.photoeditor.OnSaveBitmap
+import ja.burhanrashid52.photoeditor.PhotoEditor
+import kotlin.math.round
 
 
-class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImageFragmentListener {
+class FilterActivity : AppCompatActivity(), EditImageFragmentListener {
 
     private lateinit var mReceivedImage: Bitmap
+    lateinit var photoEditor: PhotoEditor
 
     init {
         System.loadLibrary("NativeImageProcessor")
@@ -41,7 +48,7 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
     private lateinit var filteredImage: Bitmap
     private lateinit var finalImage: Bitmap
 
-    private lateinit var filterListFragment: FilterListFragment
+    //private lateinit var filterListFragment: FilterListFragment
     private lateinit var editImageFragment: EditImageFragment
 
     private var brightnessFinal = 0
@@ -65,18 +72,35 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
         //gets the file path
         val filePath = intent.getStringExtra("sentImageByteArray")
 
+
         //loads the file
-        val file = File(filePath)
+        val file = File(filePath!!)
 
         val bitmap = BitmapFactory.decodeFile(file.absolutePath)
         //imageView.setImageBitmap(bitmap)
 
         mReceivedImage = bitmap
 
+        photoEditor = PhotoEditor.Builder(this, image_preview)
+            .setPinchTextScalable(true)
+            .build()
+
 
         loadImage()
-        setupViewPager(viewPager)
-        tabs.setupWithViewPager(viewPager)
+        loadFragment()
+        //setupViewPager(viewPager)
+        //tabs.setupWithViewPager(viewPager)
+
+
+    }
+
+    private fun loadFragment() {
+        val transaction = supportFragmentManager.beginTransaction()
+        editImageFragment = EditImageFragment()
+        editImageFragment.setListener(this)
+        transaction.replace(R.id.fragmentHolder, editImageFragment)
+        //transaction.addToBackStack(null)
+        transaction.commit()
     }
 
     private fun setupViewPager(viewPager: NonSwipeableViewPager?) {
@@ -84,19 +108,27 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
         val adapter = ViewPagerAdapter(supportFragmentManager)
 
         //add FilterListFragment
-        filterListFragment = FilterListFragment()
-        filterListFragment.setListener(this)
+        //filterListFragment = FilterListFragment()
+        //filterListFragment.setListener(this)
 
         //add EditImageFragment
         editImageFragment = EditImageFragment()
         editImageFragment.setListener(this)
 
-        adapter.addFragment(filterListFragment, "FILTERS")
+        //adapter.addFragment(filterListFragment, "FILTERS")
         adapter.addFragment(editImageFragment, "EDIT")
 
         viewPager!!.adapter = adapter
 
-        //filterListFragment.displayImage(originalImage)
+        /*var editImageFragment = EditImageFragment.getInstance()
+        editImageFragment.setListener()*/
+
+        //filterListFragment.displayImage(mReceivedImage)
+
+        /* val handler = Handler()
+         handler.postDelayed( {
+             filterListFragment.displayImage(mReceivedImage)
+         }, 500)   //0.5 seconds*/
 
     }
 
@@ -105,8 +137,54 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
         originalImage = mReceivedImage
         filteredImage = originalImage!!.copy(Bitmap.Config.ARGB_8888, true)
         finalImage = originalImage!!.copy(Bitmap.Config.ARGB_8888, true)
-        image_preview.setImageBitmap(originalImage)
+        image_preview.source.setImageBitmap(originalImage)
 
+    }
+
+    private fun rescaleImageEdit(bitmap: Bitmap): Bitmap {
+
+        val density = resources.displayMetrics.density
+
+        val currentBitmapWidth = bitmap.width
+        val currentBitmapHeight = bitmap.height
+
+        val ivWidth = photoArea.width
+        val ivHeight = photoArea.height
+
+        //var newWidth = ivWidth
+        //var newHeight = ivHeight
+
+        var newWidth = ivWidth
+        var newHeight = ivHeight - 100 * density
+
+        Log.d("Prije width i height", newWidth.toString().plus(" , " + newHeight.toString()))
+
+
+        if (currentBitmapWidth > currentBitmapHeight) {
+            //newWidth = main_constraintLayout.width
+            newHeight =
+                round(currentBitmapHeight.toDouble() * newWidth / currentBitmapWidth).toFloat()
+
+        } else if (currentBitmapHeight > currentBitmapWidth) {
+            //newHeight = main_constraintLayout.height - buttonsHeight - helpButtonsHeight - switchViewHeight
+            newWidth =
+                round(currentBitmapWidth.toDouble() * newHeight / currentBitmapHeight).toInt()
+
+        } else {
+
+            Log.d("ISTO", "ISTO")
+
+            return bitmap
+        }
+
+        Log.d("Poslije width i height", newWidth.toString().plus(" , " + newHeight.toString()))
+
+        Log.d("DENSITY", resources.displayMetrics.density.toString())
+
+
+        val newBitmap = Bitmap.createScaledBitmap(bitmap, newWidth.toInt(), newHeight.toInt(), true)
+
+        return newBitmap
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -127,11 +205,26 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
 
     fun saveImage() {
 
-        val filePathFinal = tempFileImage(this, finalImage, "name")
-        val resultIntent = Intent()
-        resultIntent.putExtra("result", filePathFinal)
-        setResult(Activity.RESULT_OK, resultIntent)
-        finish()
+        photoEditor.saveAsBitmap(object : OnSaveBitmap {
+            override fun onFailure(e: Exception?) {
+                val snackbar =
+                    Snackbar.make(coordinator, e!!.message.toString(), Snackbar.LENGTH_LONG)
+                snackbar.show()
+            }
+
+            override fun onBitmapReady(saveBitmap: Bitmap?) {
+                val imageWidth = intent.getIntExtra("imageWidth", 0)
+                val imageHeight = intent.getIntExtra("imageHeight", 0)
+                val resizedImage = Bitmap.createScaledBitmap(saveBitmap!!, imageWidth, imageHeight, true)
+                //mReceivedImage = resizedImage
+                val filePathFinal = tempFileImage(this@FilterActivity, resizedImage!!, "name")
+                val resultIntent = Intent()
+                resultIntent.putExtra("result", filePathFinal)
+                setResult(Activity.RESULT_OK, resultIntent)
+                finish()
+            }
+        })
+
     }
 
 
@@ -139,7 +232,7 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
         brightnessFinal = brightness
         val myFilter = Filter()
         myFilter.addSubFilter(BrightnessSubFilter(brightness))
-        image_preview.setImageBitmap(
+        image_preview.source.setImageBitmap(
             myFilter.processFilter(
                 finalImage.copy(
                     Bitmap.Config.ARGB_8888,
@@ -153,7 +246,7 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
         saturationFinal = saturation
         val myFilter = Filter()
         myFilter.addSubFilter(SaturationSubfilter(saturation))
-        image_preview.setImageBitmap(
+        image_preview.source.setImageBitmap(
             myFilter.processFilter(
                 finalImage.copy(
                     Bitmap.Config.ARGB_8888,
@@ -167,7 +260,7 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
         contrastFinal = contrast
         val myFilter = Filter()
         myFilter.addSubFilter(ContrastSubFilter(contrast))
-        image_preview.setImageBitmap(
+        image_preview.source.setImageBitmap(
             myFilter.processFilter(
                 finalImage.copy(
                     Bitmap.Config.ARGB_8888,
@@ -178,7 +271,7 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
     }
 
     override fun onEditStarted() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
     }
 
     override fun onEditCompleted() {
@@ -190,12 +283,12 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
 
     }
 
-    override fun onFilterSelected(filter: com.zomato.photofilters.imageprocessors.Filter) {
+    /*override fun onFilterSelected(filter: com.zomato.photofilters.imageprocessors.Filter) {
         resetControls()
         filteredImage = originalImage!!.copy(Bitmap.Config.ARGB_8888, true)
-        image_preview.setImageBitmap(filter.processFilter(filteredImage))
+        image_preview.source.setImageBitmap(filter.processFilter(filteredImage))
         finalImage = filteredImage.copy(Bitmap.Config.ARGB_8888, true)
-    }
+    }*/
 
     private fun resetControls() {
         if (editImageFragment != null) {
@@ -225,6 +318,7 @@ class FilterActivity : AppCompatActivity(), FilterListFragmentListener, EditImag
 
         return imageFile.absolutePath
     }
+
 
     override fun onSupportNavigateUp(): Boolean {
 

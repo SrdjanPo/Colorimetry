@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
     <TextView
@@ -13,14 +14,28 @@
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
         android:textColor="@color/white"/>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/thumbnailCard"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="4dp"
+        app:cardElevation="8dp"
+        app:cardCornerRadius="4dp"
+        app:cardPreventCornerOverlap="false">
     
     <ImageView
         android:id="@+id/thumbnail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:scaleType="fitCenter"
+        android:scaleType="centerCrop"
         android:adjustViewBounds="true">
 
     </ImageView>
+
+    </androidx.cardview.widget.CardView>
 
 </LinearLayout>

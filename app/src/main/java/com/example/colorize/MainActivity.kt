@@ -18,12 +18,14 @@ import java.nio.file.Files.exists
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Matrix
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Environment
 import android.os.Handler
 import android.provider.MediaStore
 import android.util.Base64
+import android.util.DisplayMetrics
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -35,6 +37,7 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.exifinterface.media.ExifInterface
 import com.algorithmia.algo.AlgoResponse
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_filter.*
@@ -43,6 +46,7 @@ import java.lang.Exception
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.round
 
 
 class MainActivity : AppCompatActivity() {
@@ -59,10 +63,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bitmapImageGray: Bitmap
     private lateinit var bitmapImageColored: Bitmap
 
+    private var buttonsHeight = 0
+    private var helpButtonsHeight = 0
+    private var switchViewHeight = 0
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        buttonsHeight = buttons.height
+        helpButtonsHeight = helpButtons.height
+        switchViewHeight = switchView.height
 
         val bitmapGrayDefault =
             BitmapFactory.decodeResource(resources, R.drawable.default_gray_image)
@@ -71,7 +83,7 @@ class MainActivity : AppCompatActivity() {
 
         val bitmapColoredDefault =
             BitmapFactory.decodeResource(resources, R.drawable.default_colorized_image)
-        bitmapImageColored = bitmapColoredDefault
+         bitmapImageColored = bitmapColoredDefault
 
         photoSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
 
@@ -147,6 +159,8 @@ class MainActivity : AppCompatActivity() {
 
             var intent = Intent(this, FilterActivity::class.java)
             intent.putExtra("sentImageByteArray", filePath)
+            intent.putExtra("imageWidth", bitmapImageColored.width)
+            intent.putExtra("imageHeight", bitmapImageColored.height)
             startActivityForResult(intent, REQUEST_CODE_FILTER)
         }
 
@@ -181,8 +195,6 @@ class MainActivity : AppCompatActivity() {
             input.put(
                 "image", url
             )
-
-            Log.d("input", input.toString())
 
             val client = Algorithmia.client("simfKEVZTqs/8uoB4b3EsOyXJag1")
             val algo = client.algo("deeplearning/ColorfulImageColorization/1.1.14")
@@ -222,6 +234,8 @@ class MainActivity : AppCompatActivity() {
 
                             buttons.visibility = View.VISIBLE
                             helpButtons.visibility = View.VISIBLE
+                            switchView.visibility = View.VISIBLE
+
 
                         }
 
@@ -243,6 +257,8 @@ class MainActivity : AppCompatActivity() {
                     switchView.visibility = View.VISIBLE
                     buttons.visibility = View.VISIBLE
                     helpButtons.visibility = View.VISIBLE
+                    switchView.visibility = View.VISIBLE
+
 
                     //photoSwitch.isEnabled = true
 
@@ -288,9 +304,10 @@ class MainActivity : AppCompatActivity() {
             Log.d("absolute path", file.absolutePath)
 
 
-            val snackBar = Snackbar.make(main_constraintLayout, "Image saved to gallery", Snackbar.LENGTH_LONG).setAction("OPEN", {
-                openImage(file)
-            })
+            val snackBar = Snackbar.make(main_constraintLayout, "Image saved to gallery", 5000)
+                .setAction("OPEN", {
+                    openImage(file)
+                })
 
             snackBar.show()
 
@@ -324,7 +341,11 @@ class MainActivity : AppCompatActivity() {
         intent.action = Intent.ACTION_VIEW
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
-        val photoURI = FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".provider", file)
+        val photoURI = FileProvider.getUriForFile(
+            this,
+            this.getApplicationContext().getPackageName() + ".provider",
+            file
+        )
 
         intent.setDataAndType(photoURI, "image/*")
 
@@ -394,24 +415,32 @@ class MainActivity : AppCompatActivity() {
 
                     try {
 
+
                         val inputStream = contentResolver.openInputStream(selectedImageUri)
                         val bitmap = BitmapFactory.decodeStream(inputStream)
 
+                        Log.d("PRIJE RESCALA", bitmap.width.toString() + " , " + bitmap.height.toString())
 
-                        photoFromGallery = encodeImage(bitmap)!!
 
-                        bitmapImageGray = bitmap
+                        //val bitmapNew = modifyOrientation(inputStream!!, bitmap)
+
+                        val bitmapNew = rescaleImage(bitmap)
+
+                        Log.d("RESCALED", bitmapNew.width.toString() + " , " + bitmapNew.height.toString())
+
+                        photoFromGallery = encodeImage(bitmapNew)!!
+
+                        bitmapImageGray = bitmapNew
 
                         val encodedPhoto = "data:image/png;base64,".plus(photoFromGallery)
 
-                        Log.d("BASE64", encodedPhoto)
-
-                        imageview.setImageBitmap(bitmap)
+                        imageview.setImageBitmap(bitmapNew)
                         image_loader.visibility = View.VISIBLE
                         infoMessages.visibility = View.VISIBLE
 
                         buttons.visibility = View.GONE
                         helpButtons.visibility = View.GONE
+                        switchView.visibility = View.GONE
 
                         colorize(encodedPhoto)
 
@@ -433,7 +462,6 @@ class MainActivity : AppCompatActivity() {
 
                 val dataImage = data.getStringExtra("result")
 
-                Log.d("DATAIMAGE", data.toString())
 
                 //gets the file path
                 val finalFilePath = intent.getStringExtra("result")
@@ -456,6 +484,51 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun rescaleImage(bitmap: Bitmap): Bitmap {
+
+        val density = resources.displayMetrics.density
+
+        val currentBitmapWidth = bitmap.width
+        val currentBitmapHeight = bitmap.height
+
+        val ivWidth = photoLL.width
+        val ivHeight = photoLL.height
+
+        //var newWidth = ivWidth
+        //var newHeight = ivHeight
+
+        var newWidth = ivWidth
+        var newHeight = ivHeight - switchViewHeight - 100 * density
+
+        Log.d("Prije width i height", newWidth.toString().plus(" , " + newHeight.toString()))
+
+
+        if (currentBitmapWidth > currentBitmapHeight) {
+            //newWidth = main_constraintLayout.width
+            newHeight = round(currentBitmapHeight.toDouble() * newWidth/currentBitmapWidth).toFloat()
+
+        } else if (currentBitmapHeight > currentBitmapWidth) {
+            //newHeight = main_constraintLayout.height - buttonsHeight - helpButtonsHeight - switchViewHeight
+            newWidth = round(currentBitmapWidth.toDouble() * newHeight / currentBitmapHeight).toInt()
+
+        } else {
+
+            Log.d("ISTO", "ISTO")
+
+            return bitmap
+        }
+
+        Log.d("Poslije width i height", newWidth.toString().plus(" , " + newHeight.toString()))
+
+        Log.d("DENSITY", resources.displayMetrics.density.toString())
+
+
+
+        val newBitmap = Bitmap.createScaledBitmap(bitmap, newWidth.toInt(), newHeight.toInt(), true)
+
+        return newBitmap
+    }
+
     private fun encodeImage(bm: Bitmap): String? {
         val baos = ByteArrayOutputStream()
         bm.compress(Bitmap.CompressFormat.JPEG, 100, baos)
@@ -463,10 +536,69 @@ class MainActivity : AppCompatActivity() {
         return Base64.encodeToString(b, Base64.DEFAULT)
     }
 
-    fun dismissKeyboard(activity: Activity) {
-        val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        if (null != activity.currentFocus) imm.hideSoftInputFromWindow(
-            activity.currentFocus!!.applicationWindowToken, 0
+    fun modifyOrientation(inputStream: InputStream, bitmap: Bitmap): Bitmap {
+
+        val exifInterface = ExifInterface(inputStream)
+        val orientation = exifInterface.getAttributeInt(
+            ExifInterface.TAG_ORIENTATION,
+            -1
         )
+
+        var finalBitmap = bitmap
+
+        Log.d("orientationnn", orientation.toString())
+
+
+        Log.d("preee", finalBitmap.toString())
+
+        if (orientation != -1) {
+
+            when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 ->
+                    finalBitmap = rotateImage(bitmap, 90f)
+                ExifInterface.ORIENTATION_ROTATE_180 ->
+                    finalBitmap = rotateImage(bitmap, 180f)
+                ExifInterface.ORIENTATION_ROTATE_270 ->
+                    finalBitmap = rotateImage(bitmap, 270f)
+                ExifInterface.ORIENTATION_FLIP_HORIZONTAL ->
+                    finalBitmap = flip(bitmap, true, false)
+                ExifInterface.ORIENTATION_FLIP_VERTICAL ->
+                    finalBitmap = flip(bitmap, false, true)
+                ExifInterface.ORIENTATION_NORMAL ->
+                    finalBitmap = rotateImage(bitmap, 0f)
+            }
+
+            Log.d("ORIJENTACIJA", orientation.toString())
+
+        }
+
+
+        Log.d("posleeee", finalBitmap.toString())
+
+
+        return finalBitmap
     }
+
+    fun rotateImage(source: Bitmap, angle: Float): Bitmap {
+        val mat = Matrix()
+        mat.postRotate(angle)
+        val bitmap =
+            Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), mat, true)
+
+        Log.d("ROTATEE", bitmap.toString())
+
+
+        return bitmap
+    }
+
+
+    fun flip(bitmap: Bitmap, horizontal: Boolean, vertical: Boolean): Bitmap {
+        Log.d("FLIPP", "FLIPP")
+
+        val matrix = Matrix()
+        matrix.preScale((if (horizontal) -1 else 1).toFloat(), (if (vertical) -1 else 1).toFloat())
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    }
+
 }
+
