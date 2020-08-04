@@ -417,16 +417,9 @@ class MainActivity : AppCompatActivity() {
 
 
                         val inputStream = contentResolver.openInputStream(selectedImageUri)
-                        val bitmap = BitmapFactory.decodeStream(inputStream)
+                        val bitmapStream = BitmapFactory.decodeStream(inputStream)
 
-                        Log.d("PRIJE RESCALA", bitmap.width.toString() + " , " + bitmap.height.toString())
-
-
-                        //val bitmapNew = modifyOrientation(inputStream!!, bitmap)
-
-                        val bitmapNew = rescaleImage(bitmap)
-
-                        Log.d("RESCALED", bitmapNew.width.toString() + " , " + bitmapNew.height.toString())
+                        /*val bitmapNew = rescaleImage(bitmap)
 
                         photoFromGallery = encodeImage(bitmapNew)!!
 
@@ -442,9 +435,46 @@ class MainActivity : AppCompatActivity() {
                         helpButtons.visibility = View.GONE
                         switchView.visibility = View.GONE
 
-                        colorize(encodedPhoto)
+                        //colorize(encodedPhoto)*/
 
                         val selectedImageFile = File(getPathFromUri(selectedImageUri))
+
+                        if (selectedImageFile.exists()){
+                            val selectedImageBitmap = BitmapFactory.decodeFile(selectedImageFile.absolutePath)
+
+                            val exif = ExifInterface(selectedImageFile.absoluteFile.toString())
+                            val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+                            val matrix = Matrix()
+
+                            when(orientation){
+                                ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90F)
+                                ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180F)
+                                ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270F)
+                            }
+
+                            val rotatedBitmap = Bitmap.createBitmap(selectedImageBitmap, 0,0 , selectedImageBitmap.width, selectedImageBitmap.height, matrix, true)
+
+                            val bitmapNew = rescaleImage(rotatedBitmap)
+
+                            photoFromGallery = encodeImage(bitmapNew)!!
+
+                            bitmapImageGray = bitmapNew
+
+                            val encodedPhoto = "data:image/png;base64,".plus(photoFromGallery)
+
+                            imageview.setImageBitmap(bitmapNew)
+                            image_loader.visibility = View.VISIBLE
+                            infoMessages.visibility = View.VISIBLE
+
+                            buttons.visibility = View.GONE
+                            helpButtons.visibility = View.GONE
+                            switchView.visibility = View.GONE
+
+                            colorize(encodedPhoto)
+
+                            selectedImageBitmap.recycle()
+                            imageview.setImageBitmap(bitmapNew)
+                        }
 
 
                     } catch (exception: Exception) {
@@ -467,7 +497,7 @@ class MainActivity : AppCompatActivity() {
                 val finalFilePath = intent.getStringExtra("result")
 
                 //loads the file
-                val file = File(dataImage)
+                val file = File(dataImage!!)
 
                 val filteredImageResult = BitmapFactory.decodeFile(file.absolutePath)
                 //imageView.setImageBitmap(bitmap)
@@ -494,35 +524,19 @@ class MainActivity : AppCompatActivity() {
         val ivWidth = photoLL.width
         val ivHeight = photoLL.height
 
-        //var newWidth = ivWidth
-        //var newHeight = ivHeight
-
         var newWidth = ivWidth
         var newHeight = ivHeight - switchViewHeight - 100 * density
 
-        Log.d("Prije width i height", newWidth.toString().plus(" , " + newHeight.toString()))
-
-
         if (currentBitmapWidth > currentBitmapHeight) {
-            //newWidth = main_constraintLayout.width
             newHeight = round(currentBitmapHeight.toDouble() * newWidth/currentBitmapWidth).toFloat()
 
         } else if (currentBitmapHeight > currentBitmapWidth) {
-            //newHeight = main_constraintLayout.height - buttonsHeight - helpButtonsHeight - switchViewHeight
             newWidth = round(currentBitmapWidth.toDouble() * newHeight / currentBitmapHeight).toInt()
 
         } else {
 
-            Log.d("ISTO", "ISTO")
-
             return bitmap
         }
-
-        Log.d("Poslije width i height", newWidth.toString().plus(" , " + newHeight.toString()))
-
-        Log.d("DENSITY", resources.displayMetrics.density.toString())
-
-
 
         val newBitmap = Bitmap.createScaledBitmap(bitmap, newWidth.toInt(), newHeight.toInt(), true)
 
@@ -534,70 +548,6 @@ class MainActivity : AppCompatActivity() {
         bm.compress(Bitmap.CompressFormat.JPEG, 100, baos)
         val b = baos.toByteArray()
         return Base64.encodeToString(b, Base64.DEFAULT)
-    }
-
-    fun modifyOrientation(inputStream: InputStream, bitmap: Bitmap): Bitmap {
-
-        val exifInterface = ExifInterface(inputStream)
-        val orientation = exifInterface.getAttributeInt(
-            ExifInterface.TAG_ORIENTATION,
-            -1
-        )
-
-        var finalBitmap = bitmap
-
-        Log.d("orientationnn", orientation.toString())
-
-
-        Log.d("preee", finalBitmap.toString())
-
-        if (orientation != -1) {
-
-            when (orientation) {
-                ExifInterface.ORIENTATION_ROTATE_90 ->
-                    finalBitmap = rotateImage(bitmap, 90f)
-                ExifInterface.ORIENTATION_ROTATE_180 ->
-                    finalBitmap = rotateImage(bitmap, 180f)
-                ExifInterface.ORIENTATION_ROTATE_270 ->
-                    finalBitmap = rotateImage(bitmap, 270f)
-                ExifInterface.ORIENTATION_FLIP_HORIZONTAL ->
-                    finalBitmap = flip(bitmap, true, false)
-                ExifInterface.ORIENTATION_FLIP_VERTICAL ->
-                    finalBitmap = flip(bitmap, false, true)
-                ExifInterface.ORIENTATION_NORMAL ->
-                    finalBitmap = rotateImage(bitmap, 0f)
-            }
-
-            Log.d("ORIJENTACIJA", orientation.toString())
-
-        }
-
-
-        Log.d("posleeee", finalBitmap.toString())
-
-
-        return finalBitmap
-    }
-
-    fun rotateImage(source: Bitmap, angle: Float): Bitmap {
-        val mat = Matrix()
-        mat.postRotate(angle)
-        val bitmap =
-            Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), mat, true)
-
-        Log.d("ROTATEE", bitmap.toString())
-
-
-        return bitmap
-    }
-
-
-    fun flip(bitmap: Bitmap, horizontal: Boolean, vertical: Boolean): Bitmap {
-        Log.d("FLIPP", "FLIPP")
-
-        val matrix = Matrix()
-        matrix.preScale((if (horizontal) -1 else 1).toFloat(), (if (vertical) -1 else 1).toFloat())
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
 }
